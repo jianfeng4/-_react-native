@@ -21,19 +21,28 @@ export function post(api: string) {
      * 第一个参数作为body参数，第二个参数作为URL path或者查询参数
      */
     return (params: {}) => {
-        return async (queryParmas?: {} | string) => {
+        return async (queryParams?: {} | string) => {
             const boarding = await getBoarding();
             const { headers, url } = Constants;
-            var data = params instanceof FormData ? params : JSON.stringify(params);
-            return handleData(fetch(buildParams(url + api, queryParmas), {
-                method: 'POST',
-                body: data,
-                headers: {
-                    'content-type': 'application/json',
-                    ...headers,
-                    'boarding-pass': boarding || ''
+            var data, cType;
+            if (params instanceof FormData) {
+                data = params;
+                cType = 'multipart/form-data';// fix TypeError: Network request failed
+            } else {
+                data = JSON.stringify(params);
+                cType = 'application/json';
+            }
+            return handleData(fetch(buildParams(url + api, queryParams),
+                {
+                    method: 'POST',
+                    body: data,
+                    headers: {
+                        'content-type': cType,
+                        ...headers,
+                        'boarding-pass': boarding || ''
+                    }
                 }
-            }))
+            ))
         }
     }
 }
